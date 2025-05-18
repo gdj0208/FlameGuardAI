@@ -1,0 +1,73 @@
+1. 아나콘다 가상환경 설치 오류
+상세 오류 :
+PackagesNotFoundError: The following packages are not available from current channels:
+  - conda-forge::bash
+  - unzip
+오류 원인 :
+Conda 채널에서 Windows용으로 컴파일된 bash나 unzip 패키지를 찾기 어렵거나 제공하지 않는 경우가 많습니다
+해결 방법 : 
+yml파일의 해당 부분들 주석처리
+
+2. urllib3 버전 오류
+상세 오류 :
+ImportError: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'OpenSSL 1.1.0h  27 Mar 2018'. See: https://github.com/urllib3/urllib3/issues/2168
+해결 방법 : urllib3 버전 다운그레이드
+	1. conda uninstall urllib3	
+	2. conda install "urllib3<2"
+
+3. CUDA 미지원 파이토치
+상세 오류 : AssertionError: Torch not compiled with CUDA enabled
+해결 방법 :
+	1. 새로운 환경 생성 : 
+		conda activate torch_test_final  
+	2. 파이토치 다운로드 (12.1 버전):
+		conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+	3. 명령어 실행 및 Conda 출력 확인: 명령어를 실행하면 Conda가 설치/변경될 패키지 목록을 보여주고 진행 여부(Proceed ([y]/n)?)를 묻습니다. 이 목록을 주의 깊게 살펴보세요.
+	pytorch 패키지 이름 뒤에 cuda 또는 gpu 와 같은 문자열이 붙어 있는지 확인하세요. (예: pytorch-2.x.x-py3.9_cuda12.1_cudnn8_0)
+	pytorch-cuda 패키지가 목록에 포함되어 있는지 확인하세요.
+	만약 이 단계에서 이미 pytorch ... cpu ... 와 같은 CPU 버전이 보인다면, Conda가 이 최소 환경에서도 CUDA 버전을 설치할 수 없는 근본적인 문제(Conda 자체, 채널 설정, 네트워크 등)가 있다는 의미입니다. -> 이 경우, 3단계 (Pip 사용)로 넘어가세요.
+	CUDA 버전이 올바르게 보인다면 y를 눌러 설치를 진행합니다.
+	4. 확인 : python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')"
+
+4. 기타 설치
+상세 오류 : 
+해결 방법 : 
+conda install -c conda-forge opencv
+conda install -c conda-forge pycocotools
+conda list numpy -> 해당 명령어 실행시 복수의 numpy가 나오는 경우 :
+	conda install numpy --force-reinstall -y (강제 재설치)
+
+<train 오류>
+1. RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'
+오류 원인 :  YOLACT 학습 코드가 GPU를 사용하려고 하는데, 여러분의 컴퓨터 환경에서 파이토치(PyTorch)가 GPU(CUDA)를 제대로 인식하거나 사용할 수 없는 상태일 때 발생
+상세 원인 : 
+C:\Users\D.J.Koo\AppData\Local\anaconda3\envs\yolact-env\Lib\site-packages\torch\utils\data\sampler.py
+def __iter__(self) -> Iterator[int]:
+        n = len(self.data_source)
+        if self.generator is None:
+            seed = int(torch.empty((), dtype=torch.int64).random_().item())
+            generator = torch.Generator()
+            generator.manual_seed(seed)
+        else:
+            generator = self.generator
+
+generator = torch.Generator(): 이 코드 라인이 바로 문제를 일으키는 핵심입니다. 
+torch.Generator() 객체를 생성할 때 별도의 device를 지정하지 않으면, 기본적으로 이 생성기는 CPU 장치에 생성합니다.
+
+해결 방법 : generator = torch.Generator() -> generator = torch.Generator(device='cuda')
+
+
+2. randomState 에러
+오류 원인 : 배열 요소를 설정하는 과정에서 시퀀스가 포함되어 문제가 발생
+상세 원인 : 
+File "C:\ML\model\model\yolact-master\data\coco.py", line 94, in __getitem__    
+    im, gt, masks, h, w, num_crowds = self.pull_item(index)
+File "C:\ML\model\model\yolact-master\utils\augmentations.py", line 309, in __call__
+    mode = random.choice(self.sample_options)
+...
+ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (6,) + inhomogeneous part.
+
+해결 방법 :
+URL : https://github.com/bubbliiiing/yolact-pytorch/issues/24
+utils/augmentations.py의 RandomSampleCrop() 함수를 주석 처리(676번 줄)하여 문제를 해결
+

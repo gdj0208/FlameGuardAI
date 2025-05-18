@@ -1,0 +1,11 @@
+Door opened
+Door closed
+Smoke
+Fire
+Cloud
+Fog
+Light
+Sunlight
+Fire Extinguisher
+ShakeB
+None

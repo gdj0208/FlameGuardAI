@@ -1,0 +1,29 @@
+
+참고 링크 : https://ksg980920.tistory.com/2
+
+1. labelme
+	1. labelme 설치 : https://github.com/wkentaro/labelme
+	2. labelme 파일을 다운받아 저장하고 아나콘다 프롬프트에서 labelme 모듈을 설치
+		conda activate labeling
+		pip install labelme
+	3. 설치 완료시 labelme 디렉토리로 이동하여 labelme를 실행
+		python labelme
+	4. 이미지 작업 후 save를 눌러 json파일을 저장
+
+2. labelme2coco
+	1. labelme2coco 설치 : https://github.com/Tony607/labelme2coco
+	2. labelme2coco 폴더 내 images파일에 이미지와 json파일들을 넣음
+	3. 아나콘다 프롬프트를 활용하여 labelme2coco.py 실행
+		conda activate labeling
+		python labelme2coco.py images
+	4. 성공적으로 완료되면 trainval.json이 labelme2coco 폴더에 저장됨.
+
+3. yolact 모델로 이동
+	1. yolact 파일 내 ./data/coco에 이미지들과 json파일들을 저장
+	2. ./data/config.py 내용 수정
+
+
+
+C:\Users\D.J.Koo\AppData\Local\anaconda3\envs\yolact-env\Lib\site-packages\torch\utils\data\sampler.py 해당 파일의 157번째 줄이 수정됨.
+
+
